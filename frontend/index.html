@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neura2 | AI Stock Advisor for India</title>
+  <meta name="description"
+    content="Neura2 — AI-powered Indian stock market advisor with price predictions, Buy/Hold/Sell signals, and a smart chatbot.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🧠</div>
+        <div class="logo-text">Neura<span>2</span></div>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">Navigation</div>
+        <div class="nav-item active" data-tab="market">
+          <i class="fas fa-chart-line"></i> Market
+        </div>
+        <div class="nav-item" data-tab="prediction">
+          <i class="fas fa-wand-magic-sparkles"></i> Predict
+        </div>
+        <div class="nav-item" data-tab="backtest">
+          <i class="fas fa-history"></i> Backtest
+        </div>
+        <div class="nav-item" data-tab="news">
+          <i class="fas fa-newspaper"></i> News &amp; Sentiment
+        </div>
+        <div class="nav-label" style="margin-top:18px">Info</div>
+        <div class="nav-item" data-tab="about">
+          <i class="fas fa-circle-info"></i> About
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="status-dot">
+          <div class="dot" id="server-dot"></div>
+          <span id="server-status">Connecting…</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <header class="header">
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="global-search" placeholder="Search stock (TCS, RELIANCE, WIPRO…)" autocomplete="off">
+        <button class="search-btn" id="global-search-btn">Analyse</button>
+      </div>
+      <div class="header-right">
+        <div class="time-badge">
+          <strong id="clock">--:--:--</strong>
+          <span>IST &nbsp;|&nbsp; NSE/BSE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Main Content ───────────────────────────────────────────── -->
+    <main class="main">
+
+      <!-- ═══════════ Market Tab ═══════════ -->
+      <div class="tab-pane active" id="tab-market">
+        <h2 class="page-title"><i class="fas fa-chart-bar"></i> Market Overview</h2>
+
+        <div class="indices-row" id="indices-row"></div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-list-ul"></i> Active Stocks</div>
+          <div class="table-wrap">
+            <table id="stocks-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Company</th>
+                  <th>Price (₹)</th>
+                  <th>Change</th>
+                  <th>% Change</th>
+                  <th>Signal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="stocks-body">
+                <tr>
+                  <td colspan="7">
+                    <div class="empty"><i class="fas fa-spinner fa-spin"></i>
+                      <p>Loading stocks…</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ Prediction Tab ═══════════ -->
+      <div class="tab-pane" id="tab-prediction">
+        <h2 class="page-title"><i class="fas fa-wand-magic-sparkles"></i> AI Prediction</h2>
+
+        <div class="predict-header">
+          <input type="text" id="predict-input" placeholder="Enter symbol (e.g. WIPRO, TCS)" maxlength="15"
+            autocomplete="off">
+          <button class="btn-primary" id="predict-btn">
+            <i class="fas fa-bolt"></i> Analyse
+          </button>
+          <div id="predict-error" style="color:var(--danger);font-size:0.8rem;display:none">
+            Stock not found. Try WIPRO, TCS, RELIANCE, INFY…
+          </div>
+        </div>
+
+        <!-- Chart + Analysis card grid -->
+        <div class="predict-grid" id="predict-grid" style="display:none">
+          <!-- Chart -->
+          <div class="card chart-card">
+            <div class="chart-header">
+              <h3 id="chart-title">Price History</h3>
+              <div class="chart-controls">
+                <div class="chart-type-btns">
+                  <button class="period-btn active" id="chart-line-btn"><i class="fas fa-chart-line"></i> Line</button>
+                  <button class="period-btn" id="chart-candle-btn"><i class="fas fa-chart-candlestick"></i>
+                    Candle</button>
+                </div>
+                <div class="period-btns">
+                  <button class="period-btn active" data-p="1w">1W</button>
+                  <button class="period-btn" data-p="1m">1M</button>
+                  <button class="period-btn" data-p="3m">3M</button>
+                  <button class="period-btn" data-p="6m">6M</button>
+                  <button class="period-btn" data-p="1y">1Y</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="price-chart"></canvas></div>
+            <!-- RSI sub-chart -->
+            <div class="subchart-section">
+              <div class="subchart-label">RSI (14) <span class="subchart-hint">— Oversold &lt; 30 · Overbought &gt;
+                  70</span></div>
+              <div class="subchart-wrap"><canvas id="rsi-chart"></canvas></div>
+            </div>
+            <!-- MACD sub-chart -->
+            <div class="subchart-section">
+              <div class="subchart-label">MACD (12,26,9) <span class="subchart-hint">— Histogram · Signal · MACD
+                  Line</span></div>
+              <div class="subchart-wrap"><canvas id="macd-chart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Analysis card -->
+          <div class="card analysis-card">
+            <div class="price-hero">
+              <div class="sym" id="a-symbol">---</div>
+              <div class="price" id="a-price">₹0.00</div>
+              <div class="ch" id="a-change">+0.00 (0.00%)</div>
+            </div>
+            <div style="text-align:center">
+              <div class="action-ring hold" id="action-ring">
+                <span id="action-text">---</span>
+                <span class="conf" id="action-conf">--%</span>
+              </div>
+            </div>
+            <div class="stat-rows">
+              <div class="stat-row">
+                <span class="lbl">Predicted Price</span>
+                <span class="val" id="a-predicted">₹0.00</span>
+              </div>
+              <div class="stat-row">
+                <span class="lbl">Expected Change</span>
+                <span class="val" id="a-exp-change">0.00%</span>
+              </div>
+              <div class="stat-row">
+                <span class="lbl">Risk Level</span>
+                <span class="val"><span class="badge moderate" id="a-risk">---</span></span>
+              </div>
+              <div class="stat-row">
+                <span class="lbl">Timeframe</span>
+                <span class="val" id="a-timeframe">7 Days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail strip (8 cells) -->
+        <div class="detail-strip" id="detail-strip" style="display:none">
+          <div class="detail-cell">
+            <div class="lbl">Prev Close</div>
+            <div class="val" id="d-prev">₹0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">Open</div>
+            <div class="val" id="d-open">₹0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">Day High</div>
+            <div class="val" id="d-high">₹0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">Day Low</div>
+            <div class="val" id="d-low">₹0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">Volume</div>
+            <div class="val" id="d-vol">0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">Avg Volume</div>
+            <div class="val" id="d-avgvol">0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">52W High</div>
+            <div class="val" id="d-52h">₹0</div>
+          </div>
+          <div class="detail-cell">
+            <div class="lbl">52W Low</div>
+            <div class="val" id="d-52l">₹0</div>
+          </div>
+        </div>
+
+        <!-- Indicator grid (5 cards) -->
+        <div class="ind-grid" id="ind-grid" style="display:none;margin-top:14px">
+          <div class="card ind-item">
+            <div class="lbl">RSI (14)</div>
+            <div class="val" id="i-rsi">--</div>
+            <div class="sub" id="i-rsi-status" style="color:var(--warning)">Neutral</div>
+            <div class="rsi-bar-bg">
+              <div class="rsi-bar-fill" id="i-rsi-bar" style="width:50%;background:var(--warning)"></div>
+            </div>
+          </div>
+          <div class="card ind-item">
+            <div class="lbl">Trend</div>
+            <div class="val" id="i-trend">--</div>
+            <div class="sub" id="i-trend-sub" style="color:var(--text-muted)">—</div>
+          </div>
+          <div class="card ind-item">
+            <div class="lbl">SMA 20</div>
+            <div class="val" id="i-sma20">--</div>
+            <div class="sub" style="color:var(--text-muted)">20-day avg</div>
+          </div>
+          <div class="card ind-item">
+            <div class="lbl">SMA 50</div>
+            <div class="val" id="i-sma50">--</div>
+            <div class="sub" style="color:var(--text-muted)">50-day avg</div>
+          </div>
+          <div class="card ind-item">
+            <div class="lbl">MACD</div>
+            <div class="val" id="i-macd">--</div>
+            <div class="sub" style="color:var(--text-muted)">EMA12 − EMA26</div>
+          </div>
+        </div>
+
+        <!-- ══ Consolidated Analytics Card (tabbed) ══ -->
+        <div class="card analytics-card" id="analytics-card" style="display:none;margin-top:14px">
+          <div class="analytics-tabs">
+            <button class="atab-btn active" data-atab="regime"><i class="fas fa-signal"></i> Regime</button>
+            <button class="atab-btn" data-atab="prob"><i class="fas fa-percent"></i> Probability</button>
+            <button class="atab-btn" data-atab="risk"><i class="fas fa-shield-halved"></i> Risk</button>
+            <button class="atab-btn" data-atab="factors"><i class="fas fa-list-check"></i> Factors</button>
+          </div>
+
+          <!-- Regime pane -->
+          <div class="atab-pane active" id="atab-regime">
+            <div id="regime-panel"></div>
+          </div>
+          <!-- Probability pane -->
+          <div class="atab-pane" id="atab-prob">
+            <div id="prob-panel"></div>
+          </div>
+          <!-- Risk pane -->
+          <div class="atab-pane" id="atab-risk">
+            <div id="risk-panel"></div>
+          </div>
+          <!-- Factors pane -->
+          <div class="atab-pane" id="atab-factors">
+            <div id="feature-panel"></div>
+          </div>
+        </div>
+
+        <!-- ══ Analyst Section ══ -->
+        <div class="analyst-section" id="analyst-section" style="display:none;margin-top:20px">
+
+          <!-- Price Targets -->
+          <div class="card">
+            <div class="card-title"><i class="fas fa-bullseye"></i> Analyst Price Targets</div>
+            <div class="at-targets">
+              <div class="at-item low">
+                <div class="at-label">Low Target</div>
+                <div class="at-val" id="at-low">₹0</div>
+              </div>
+              <div class="at-item avg">
+                <div class="at-label">Avg Target</div>
+                <div class="at-val" id="at-avg">₹0</div>
+              </div>
+              <div class="at-item current">
+                <div class="at-label">Current</div>
+                <div class="at-val" id="at-current">₹0</div>
+              </div>
+              <div class="at-item high">
+                <div class="at-label">High Target</div>
+                <div class="at-val" id="at-high">₹0</div>
+              </div>
+            </div>
+            <div class="at-bar-wrap">
+              <div class="at-bar-track">
+                <div class="at-bar-fill" id="at-bar-fill" style="width:50%"></div>
+              </div>
+              <div class="at-bar-labels">
+                <span>Low</span><span>Avg</span><span>High</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Recommendations -->
+          <div class="card" style="margin-top:16px">
+            <div class="card-title"><i class="fas fa-chart-bar"></i> Analyst Recommendations (Monthly)</div>
+            <div id="monthly-recs"></div>
+          </div>
+
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty" id="predict-empty">
+          <i class="fas fa-wand-magic-sparkles"></i>
+          <p>Enter a stock symbol above to get AI analysis and price prediction</p>
+        </div>
+      </div>
+
+      <!-- ═══════════ Backtest Tab ═══════════ -->
+      <div class="tab-pane" id="tab-backtest">
+        <h2 class="page-title"><i class="fas fa-history"></i> Strategy Backtester</h2>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-flask"></i> Run Backtest</div>
+          <div class="bt-input-row">
+            <input type="text" id="bt-symbol-input" placeholder="Enter symbol (e.g. TCS, INFY, RELIANCE)" maxlength="15"
+              autocomplete="off">
+            <button class="btn-primary" id="bt-run-btn"><i class="fas fa-play"></i> Run Backtest</button>
+          </div>
+          <p class="bt-desc">Simulates 3 algorithmic trading strategies on historical price data and computes
+            performance vs buy-and-hold benchmark.</p>
+        </div>
+
+        <!-- Results area (hidden until run) -->
+        <div id="bt-results-area" style="display:none">
+
+          <!-- Strategy cards -->
+          <div id="bt-cards" style="margin-top:14px"></div>
+
+          <!-- Equity curve -->
+          <div class="card" style="margin-top:14px">
+            <div class="card-title"><i class="fas fa-chart-area"></i> Equity Curves <span id="bt-eq-period"
+                style="font-weight:400;color:var(--text-muted);font-size:0.78rem"></span></div>
+            <div style="position:relative;height:220px">
+              <canvas id="equity-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Trades table -->
+          <div class="card" id="bt-trades-card" style="margin-top:14px">
+            <div class="card-title"><i class="fas fa-table"></i> Recent Trades <span id="bt-best-label"
+                style="font-size:0.78rem;color:var(--text-muted);font-weight:400"></span></div>
+            <div class="bt-tbl-wrap">
+              <table class="bt-tbl" id="bt-trades-tbl">
+                <thead>
+                  <tr>
+                    <th>Entry</th>
+                    <th>Exit</th>
+                    <th>Type</th>
+                    <th>Entry ₹</th>
+                    <th>Exit ₹</th>
+                    <th>P&amp;L ₹</th>
+                    <th>Return %</th>
+                    <th>Days</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody id="bt-trades-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backtest empty state -->
+        <div class="empty" id="bt-empty">
+          <i class="fas fa-history"></i>
+          <p>Enter a symbol and click <strong>Run Backtest</strong> to simulate trading strategies</p>
+        </div>
+      </div>
+
+      <!-- ═══════════ News & Sentiment Tab ═══════════ -->
+      <div class="tab-pane" id="tab-news">
+        <h2 class="page-title"><i class="fas fa-newspaper"></i> News &amp; Sentiment Analysis</h2>
+
+        <!-- API Key notice -->
+        <div class="card news-api-banner">
+          <div class="news-api-icon">🔑</div>
+          <div class="news-api-text">
+            <strong>News API not configured yet</strong>
+            <p>Add your <code>NEWS_API_KEY</code> and optionally a <code>TWITTER_BEARER_TOKEN</code> to
+              <code>backend/.env</code> to enable live news and social sentiment. FinBERT NLP will automatically
+              classify each article as <em>Positive</em>, <em>Negative</em>, or <em>Neutral</em>.
+            </p>
+          </div>
+          <button class="btn-secondary" id="news-settings-btn"><i class="fas fa-gear"></i> Configure</button>
+        </div>
+
+        <!-- Search bar -->
+        <div class="news-search-row">
+          <input type="text" id="news-symbol-input" placeholder="Search news for a stock (e.g. TCS, RELIANCE)…"
+            autocomplete="off">
+          <button class="btn-primary" id="news-search-btn"><i class="fas fa-search"></i> Search</button>
+        </div>
+
+        <!-- Sentiment summary bar -->
+        <div class="card sent-summary-card" id="sent-summary-card" style="display:none">
+          <div class="sent-summary-header">
+            <span id="sent-symbol-label"></span>
+            <span class="sent-score" id="sent-score">--</span>
+          </div>
+          <div class="sent-bar-row">
+            <span class="sent-pos-lbl" id="sent-pos-count">0 Positive</span>
+            <div class="sent-bar">
+              <div class="sent-bar-pos" id="sent-bar-pos" style="width:0%"></div>
+              <div class="sent-bar-neu" id="sent-bar-neu" style="width:0%"></div>
+              <div class="sent-bar-neg" id="sent-bar-neg" style="width:0%"></div>
+            </div>
+            <span class="sent-neg-lbl" id="sent-neg-count">0 Negative</span>
+          </div>
+        </div>
+
+        <!-- Tabs: News | Twitter -->
+        <div class="news-tabs">
+          <button class="ntab-btn active" data-ntab="articles"><i class="fas fa-newspaper"></i> News Articles</button>
+          <button class="ntab-btn" data-ntab="twitter"><i class="fab fa-twitter"></i> Twitter / X</button>
+        </div>
+
+        <!-- Articles pane -->
+        <div class="ntab-pane active" id="ntab-articles">
+          <div id="news-articles-list">
+            <!-- Placeholders -->
+            <div class="news-placeholder-list">
+              <div class="news-placeholder-item">
+                <div class="news-ph-badge positive">Positive</div>
+                <div class="news-ph-content">
+                  <div class="news-ph-headline">Awaiting live news feed — configure your API key</div>
+                  <div class="news-ph-meta">FinBERT · Sentiment analysis ready</div>
+                </div>
+              </div>
+              <div class="news-placeholder-item">
+                <div class="news-ph-badge neutral">Neutral</div>
+                <div class="news-ph-content">
+                  <div class="news-ph-headline">Live headlines will appear here when API is connected</div>
+                  <div class="news-ph-meta">Source · Published time · Relevance score</div>
+                </div>
+              </div>
+              <div class="news-placeholder-item">
+                <div class="news-ph-badge negative">Negative</div>
+                <div class="news-ph-content">
+                  <div class="news-ph-headline">FinBERT NLP will classify each article automatically</div>
+                  <div class="news-ph-meta">distilbert-base-uncased-finetuned-sst-2-english</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Twitter pane -->
+        <div class="ntab-pane" id="ntab-twitter">
+          <div class="twitter-placeholder">
+            <i class="fab fa-twitter" style="font-size:2.5rem;color:var(--text-muted);margin-bottom:12px"></i>
+            <h4>Twitter / X Sentiment</h4>
+            <p>Add <code>TWITTER_BEARER_TOKEN</code> to <code>backend/.env</code> to enable real-time tweet sentiment
+              analysis using FinBERT NLP.</p>
+            <div class="twitter-ph-metrics">
+              <div class="tph-metric"><span class="tph-val">--</span><span class="tph-lbl">Bullish Tweets</span></div>
+              <div class="tph-metric"><span class="tph-val">--</span><span class="tph-lbl">Bearish Tweets</span></div>
+              <div class="tph-metric"><span class="tph-val">--</span><span class="tph-lbl">Tweet Volume 24h</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ About Tab ═══════════ -->
+      <div class="tab-pane" id="tab-about">
+        <h2 class="page-title"><i class="fas fa-circle-info"></i> About Neura2</h2>
+        <div class="card" style="max-width:680px;line-height:1.8;color:var(--text-secondary)">
+          <div class="card-title"><i class="fas fa-brain"></i> What is Neura2?</div>
+          <p>Neura2 is an AI-powered Indian stock market advisor. It uses <strong>historical price data</strong> from
+            Yahoo Finance CSVs to compute technical indicators (RSI, SMA, EMA, MACD) and generate Buy / Hold / Sell
+            signals.</p>
+          <br>
+
+          <div class="card-title"><i class="fas fa-database"></i> Adding Stock Data</div>
+          <p>Download CSV files from <a href="https://finance.yahoo.com" target="_blank"
+              style="color:var(--accent-light)">finance.yahoo.com</a> and place them in <code
+              style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px">data/stocks/</code></p>
+          <p style="margin-top:6px">Supported filenames for stocks:</p>
+          <ul style="margin:6px 0 0 18px;font-size:0.85rem">
+            <li><code>WIPRO.NS.csv</code> or <code>wipro.NS.csv</code></li>
+            <li><code>TCS.NS.csv</code>, <code>RELIANCE.NS.csv</code>, etc.</li>
+          </ul>
+          <br>
+
+          <div class="card-title"><i class="fas fa-chart-area"></i> Adding Index Data (Nifty / Sensex)</div>
+          <p>Place index CSVs in the same <code>data/stocks/</code> folder:</p>
+          <table style="margin:10px 0;font-size:0.82rem;border-collapse:collapse;width:100%">
+            <thead>
+              <tr style="color:var(--text-muted);border-bottom:1px solid var(--glass-border)">
+                <th style="padding:6px 10px;text-align:left">Index</th>
+                <th style="padding:6px 10px;text-align:left">Filename</th>
+                <th style="padding:6px 10px;text-align:left">Yahoo Symbol</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:6px 10px"><strong>Nifty 50</strong></td>
+                <td><code>^NSEI.csv</code></td>
+                <td><code>^NSEI</code></td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px"><strong>Sensex</strong></td>
+                <td><code>^BSESN.csv</code></td>
+                <td><code>^BSESN</code></td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px"><strong>Nifty Bank</strong></td>
+                <td><code>^NSEBANK.csv</code></td>
+                <td><code>^NSEBANK</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+          <div class="card-title"><i class="fas fa-robot"></i> Chatbot</div>
+          <p>The AI Assistant supports: price queries, buy/sell advice, comparisons, backtests, regime detection,
+            probabilistic forecasts, and feature importance explanations.</p>
+          <br>
+          <p style="color:var(--warning);font-size:0.8rem">⚠️ For educational purposes only. Not financial advice.</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── Chat Panel ─────────────────────────────────────────────── -->
+    <aside class="chat-panel">
+      <div class="chat-header">
+        <div class="bot-avatar-sm">🤖</div>
+        <h3>AI Assistant</h3>
+        <span class="online-dot">● Online</span>
+        <button class="chat-expand-btn" id="chat-expand-btn" title="Expand chat">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="quick-btns" id="quick-btns">
+        <button class="quick-btn" data-q="Should I buy TCS?">💰 Buy TCS?</button>
+        <button class="quick-btn" data-q="compare Infosys vs TCS">⚖️ Compare</button>
+        <button class="quick-btn" data-q="TCS technical analysis">📐 Technical</button>
+        <button class="quick-btn" data-q="risks of Reliance">⚠️ Risk</button>
+        <button class="quick-btn" data-q="help">❓ Help</button>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Ask about stocks…" autocomplete="off">
+        <button class="send-btn" id="send-btn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ── Chat Fullscreen Modal ──────────────────────────────────────── -->
+  <div class="chat-modal-overlay" id="chat-modal-overlay">
+    <div class="chat-modal">
+      <div class="chat-modal-header">
+        <div class="chat-modal-title">
+          <div class="bot-avatar-sm">🤖</div>
+          <div>
+            <h2>Neura2 AI Assistant</h2>
+            <span class="online-dot">● Online — Ask anything about Indian stocks</span>
+          </div>
+        </div>
+        <div class="chat-modal-actions">
+          <button class="chat-modal-close" id="chat-modal-close" title="Close">
+            <i class="fas fa-compress-alt"></i> Minimise
+          </button>
+        </div>
+      </div>
+      <div class="chat-modal-quick-btns" id="modal-quick-btns">
+        <button class="quick-btn" data-q="Should I buy TCS?">💰 Buy TCS?</button>
+        <button class="quick-btn" data-q="compare Infosys vs TCS">⚖️ Compare INFY vs TCS</button>
+        <button class="quick-btn" data-q="TCS technical analysis">📐 TCS Technicals</button>
+        <button class="quick-btn" data-q="risks of Reliance">⚠️ Reliance Risk</button>
+        <button class="quick-btn" data-q="What if Nifty falls 10%, how might TCS react?">🎭 Scenario</button>
+        <button class="quick-btn" data-q="TCS sharpe ratio">📐 Quant TCS</button>
+        <button class="quick-btn" data-q="Is Tata Steel overvalued?">💰 Valuation</button>
+        <button class="quick-btn" data-q="help">❓ All Commands</button>
+      </div>
+      <div class="chat-messages chat-modal-messages" id="chat-modal-messages"></div>
+      <div class="chat-modal-input-row">
+        <input type="text" id="chat-modal-input"
+          placeholder="Ask anything — 'Should I buy Infosys?' or 'compare TCS vs INFY'…" autocomplete="off">
+        <button class="send-btn" id="chat-modal-send"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Analysing…</p>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/market.js"></script>
+  <script src="js/prediction.js"></script>
+  <script src="js/backtest-tab.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+
+</html>

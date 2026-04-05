@@ -1,0 +1,16 @@
+{
+    "name": "neura2-backend",
+    "version": "1.0.0",
+    "description": "Neura2 - Indian Stock AI Advisor Backend",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "csv-parse": "^5.5.3",
+        "dotenv": "^17.3.1",
+        "express": "^4.18.2"
+    }
+}
