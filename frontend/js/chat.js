@@ -38,7 +38,7 @@ function closeModal() {
 }
 
 // ── Seed welcome message ──────────────────────────────────────────────────
-appendBot(`👋 **Hello! I'm Neura2 AI.**
+appendBot(`👋 **Hello! I'm NeuraWealth AI.**
 
 Ask me anything about Indian stocks:
 • **Predict** — "predict Tata Steel"

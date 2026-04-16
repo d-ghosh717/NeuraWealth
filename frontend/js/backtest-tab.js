@@ -154,7 +154,7 @@
     if (canvas) {
       if (eqChart) { eqChart.destroy(); eqChart = null; }
 
-      const colors = ['#7c3aed', '#10b981', '#f59e0b'];
+      const colors = ['#c5a059', '#10b981', '#f59e0b'];
       const datasets = stratDefs.map(({ key, label }, i) => {
         const s = strats[key];
         if (!s?.equityCurve?.length) return null;
@@ -208,8 +208,8 @@
             tooltip: {
               mode: 'index',
               intersect: false,
-              backgroundColor: 'rgba(13,21,40,0.95)',
-              borderColor: 'rgba(124,58,237,0.3)',
+              backgroundColor: 'rgba(5, 5, 5, 0.95)',
+              borderColor: 'rgba(197, 160, 89, 0.3)',
               borderWidth: 1,
               titleColor: '#94a3b8',
               bodyColor: '#f1f5f9',

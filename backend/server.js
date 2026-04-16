@@ -1,4 +1,4 @@
-// backend/server.js — Neura2 Main Express Server
+// backend/server.js — NeuraWealth Main Express Server
 require('dotenv').config(); // Load .env into process.env
 const express = require('express');
 const cors = require('cors');

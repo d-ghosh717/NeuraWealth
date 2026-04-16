@@ -374,7 +374,7 @@ function renderRSIChart(chartData) {
     data: {
       labels,
       datasets: [
-        { label: 'RSI', data: rsiVals, borderColor: '#a78bfa', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'RSI', data: rsiVals, borderColor: '#c5a059', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
         { label: 'OB', data: labels.map(() => 70), borderColor: 'rgba(239,68,68,0.4)', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false },
         { label: 'OS', data: labels.map(() => 30), borderColor: 'rgba(16,185,129,0.4)', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false },
       ]
@@ -405,8 +405,8 @@ function renderMACDChart(chartData) {
       labels,
       datasets: [
         { type: 'bar', label: 'Histogram', data: histo, backgroundColor: histo.map(v => v >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)'), borderWidth: 0 },
-        { type: 'line', label: 'MACD', data: macdLine, borderColor: '#60a5fa', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
-        { type: 'line', label: 'Signal', data: signal, borderColor: '#f87171', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { type: 'line', label: 'MACD', data: macdLine, borderColor: '#e2c28d', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { type: 'line', label: 'Signal', data: signal, borderColor: '#a3844a', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
       ]
     },
     options: {
@@ -470,8 +470,8 @@ async function loadChart(symbol, period, predictedPrice, existingChartData) {
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: 'rgba(13,21,40,0.95)',
-              borderColor: 'rgba(124,58,237,0.3)', borderWidth: 1,
+              backgroundColor: 'rgba(5,5,5,0.95)',
+              borderColor: 'rgba(197,160,89,0.3)', borderWidth: 1,
               titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 10,
               callbacks: {
                 label: c => {
@@ -517,19 +517,19 @@ async function loadChart(symbol, period, predictedPrice, existingChartData) {
       const bandLower = allData.map(v => v ? v * (1 - atrPct / 100) : null);
 
       const gradFill = ctx.createLinearGradient(0, 0, 0, 300);
-      gradFill.addColorStop(0, 'rgba(124,58,237,0.22)');
-      gradFill.addColorStop(1, 'rgba(124,58,237,0)');
+      gradFill.addColorStop(0, 'rgba(197,160,89,0.2)');
+      gradFill.addColorStop(1, 'rgba(197,160,89,0)');
 
       priceChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: allLabels,
           datasets: [
-            { label: 'Band Upper', data: bandUpper, borderColor: 'transparent', backgroundColor: 'rgba(124,58,237,0.06)', fill: '+1', pointRadius: 0, tension: 0.35 },
+            { label: 'Band Upper', data: bandUpper, borderColor: 'transparent', backgroundColor: 'rgba(197,160,89,0.05)', fill: '+1', pointRadius: 0, tension: 0.35 },
             { label: 'Band Lower', data: bandLower, borderColor: 'transparent', backgroundColor: 'transparent', fill: false, pointRadius: 0, tension: 0.35 },
             {
               label: symbol, data: allData,
-              borderColor: 'rgba(124,58,237,0.9)',
+              borderColor: 'rgba(197,160,89,0.9)',
               backgroundColor: gradFill,
               borderWidth: 2.5, fill: true, tension: 0.35,
               pointRadius: allData.map((_, i) => i === allData.length - 1 ? 8 : 0),
@@ -537,7 +537,7 @@ async function loadChart(symbol, period, predictedPrice, existingChartData) {
               pointBackgroundColor: allData.map((_, i) => i === allData.length - 1 ? (predUp ? '#10b981' : '#ef4444') : 'transparent'),
               pointBorderColor: 'white', pointBorderWidth: 2,
               segment: {
-                borderColor: c => c.p1DataIndex === allData.length - 1 ? (predUp ? '#10b981' : '#ef4444') : 'rgba(124,58,237,0.9)',
+                borderColor: c => c.p1DataIndex === allData.length - 1 ? (predUp ? '#10b981' : '#ef4444') : 'rgba(197,160,89,0.8)',
                 borderDash: c => c.p1DataIndex === allData.length - 1 ? [6, 4] : [],
               }
             },
@@ -551,8 +551,8 @@ async function loadChart(symbol, period, predictedPrice, existingChartData) {
             legend: { display: false },
             decimation: { enabled: longPeriod, algorithm: 'lttb', samples: 80 },
             tooltip: {
-              backgroundColor: 'rgba(13,21,40,0.95)',
-              borderColor: 'rgba(124,58,237,0.3)', borderWidth: 1,
+              backgroundColor: 'rgba(5,5,5,0.95)',
+              borderColor: 'rgba(197,160,89,0.3)', borderWidth: 1,
               titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 10,
               filter: item => item.datasetIndex === 2,
               callbacks: { label: c => ` ₹${Number(c.parsed.y).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` }
